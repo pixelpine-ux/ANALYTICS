@@ -1,34 +1,116 @@
-from pydantic import BaseModel, validator
+from pydantic import BaseModel, Field, validator
 from datetime import datetime
 from typing import Optional, List
 
-
+# === SALES SCHEMAS ===
 class SaleCreate(BaseModel):
     date: datetime
-    product_name: str
-    amount: float  # API accepts float, we convert to cents internally
-    customer_id: Optional[str] = None
-    category: Optional[str] = None
+    product_name: str = Field(..., min_length=1, max_length=200)
+    amount: float = Field(..., gt=0, description="Amount in dollars")
+    customer_id: Optional[str] = Field(None, max_length=50)
+    category: Optional[str] = Field(None, max_length=100)
+    
+    @validator('product_name')
+    def validate_product_name(cls, v):
+        if not v.strip():
+            raise ValueError('Product name cannot be empty')
+        return v.strip()
     
     @validator('amount')
-    def amount_must_be_positive(cls, v):
+    def validate_amount(cls, v):
         if v <= 0:
             raise ValueError('Amount must be positive')
-        return v
+        if v > 999999.99:
+            raise ValueError('Amount too large')
+        return round(v, 2)
 
+class SaleUpdate(BaseModel):
+    date: Optional[datetime] = None
+    product_name: Optional[str] = Field(None, min_length=1, max_length=200)
+    amount: Optional[float] = Field(None, gt=0)
+    customer_id: Optional[str] = Field(None, max_length=50)
+    category: Optional[str] = Field(None, max_length=100)
 
 class SaleResponse(BaseModel):
     id: int
     date: datetime
     product_name: str
-    amount: float  # Convert back from cents for API response
+    amount: float
     customer_id: Optional[str]
     category: Optional[str]
+    created_at: datetime
     
     class Config:
         from_attributes = True
 
+# === CUSTOMER SCHEMAS ===
+class CustomerCreate(BaseModel):
+    id: str = Field(..., min_length=1, max_length=50)
+    name: Optional[str] = Field(None, max_length=200)
+    email: Optional[str] = Field(None, max_length=255)
+    
+    @validator('id')
+    def validate_customer_id(cls, v):
+        if not v.strip():
+            raise ValueError('Customer ID cannot be empty')
+        return v.strip().upper()
+    
+    @validator('email')
+    def validate_email(cls, v):
+        if v and '@' not in v:
+            raise ValueError('Invalid email format')
+        return v
 
+class CustomerUpdate(BaseModel):
+    name: Optional[str] = Field(None, max_length=200)
+    email: Optional[str] = Field(None, max_length=255)
+
+class CustomerResponse(BaseModel):
+    id: str
+    name: Optional[str]
+    email: Optional[str]
+    created_at: datetime
+    
+    class Config:
+        from_attributes = True
+
+# === EXPENSE SCHEMAS ===
+class ExpenseCreate(BaseModel):
+    date: datetime
+    description: str = Field(..., min_length=1, max_length=500)
+    amount: float = Field(..., gt=0, description="Amount in dollars")
+    category: Optional[str] = Field(None, max_length=100)
+    
+    @validator('description')
+    def validate_description(cls, v):
+        if not v.strip():
+            raise ValueError('Description cannot be empty')
+        return v.strip()
+    
+    @validator('amount')
+    def validate_amount(cls, v):
+        if v <= 0:
+            raise ValueError('Amount must be positive')
+        return round(v, 2)
+
+class ExpenseUpdate(BaseModel):
+    date: Optional[datetime] = None
+    description: Optional[str] = Field(None, min_length=1, max_length=500)
+    amount: Optional[float] = Field(None, gt=0)
+    category: Optional[str] = Field(None, max_length=100)
+
+class ExpenseResponse(BaseModel):
+    id: int
+    date: datetime
+    description: str
+    amount: float
+    category: Optional[str]
+    created_at: datetime
+    
+    class Config:
+        from_attributes = True
+
+# === ANALYTICS SCHEMAS ===
 class KPISummary(BaseModel):
     total_revenue: float
     total_sales_count: int
@@ -38,8 +120,22 @@ class KPISummary(BaseModel):
     period_start: datetime
     period_end: datetime
 
-
 class UploadResponse(BaseModel):
     message: str
     records_processed: int
+    errors: List[str] = []
+
+# === ERROR SCHEMAS ===
+class ErrorResponse(BaseModel):
+    detail: str
+    error_code: Optional[str] = None
+    timestamp: datetime = Field(default_factory=datetime.utcnow)
+
+# === BULK OPERATIONS ===
+class BulkSaleCreate(BaseModel):
+    sales: List[SaleCreate] = Field(..., max_items=1000)
+
+class BulkResponse(BaseModel):
+    success_count: int
+    error_count: int
     errors: List[str] = []

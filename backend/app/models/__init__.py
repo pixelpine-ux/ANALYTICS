@@ -1,5 +1,4 @@
-from .sales import Sale
-from .customers import Customer
-from .expenses import Expense
+# Import from analytics.py which has the optimized models
+from .analytics import Sale, Customer, Expense
 
 __all__ = ["Sale", "Customer", "Expense"]
