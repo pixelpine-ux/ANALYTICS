@@ -1,5 +1,5 @@
 from sqlalchemy.orm import Session
-from sqlalchemy import desc, and_
+from sqlalchemy import desc
 from datetime import datetime
 from typing import List, Optional
 from ..models.analytics import Sale
@@ -13,7 +13,6 @@ class SalesService:
     def create_sale(self, sale_data: SaleCreate) -> Sale:
         """Create a new sale record"""
         try:
-            # Convert dollars to cents for storage
             sale = Sale(
                 date=sale_data.date,
                 product_name=sale_data.product_name,
@@ -80,17 +79,3 @@ class SalesService:
         except Exception as e:
             self.db.rollback()
             raise HTTPException(status_code=400, detail=f"Error deleting sale: {str(e)}")
-    
-    def bulk_create_sales(self, sales_data: List[SaleCreate]) -> tuple[int, List[str]]:
-        """Bulk create sales with error handling"""
-        created_count = 0
-        errors = []
-        
-        for i, sale_data in enumerate(sales_data):
-            try:
-                self.create_sale(sale_data)
-                created_count += 1
-            except Exception as e:
-                errors.append(f"Row {i+1}: {str(e)}")
-        
-        return created_count, errors

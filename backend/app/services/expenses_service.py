@@ -1,5 +1,5 @@
 from sqlalchemy.orm import Session
-from sqlalchemy import desc
+from sqlalchemy import desc, func
 from datetime import datetime
 from typing import List, Optional
 from ..models.analytics import Expense
@@ -81,8 +81,6 @@ class ExpensesService:
     
     def get_expenses_by_category(self, start_date: datetime, end_date: datetime) -> dict:
         """Get expense totals grouped by category"""
-        from sqlalchemy import func
-        
         results = self.db.query(
             Expense.category,
             func.sum(Expense.amount_cents).label('total_cents')

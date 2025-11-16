@@ -74,3 +74,68 @@ async def get_top_products(
         "period_start": start_date,
         "period_end": end_date
     }
+
+
+@router.get("/summary/custom")
+async def get_custom_kpi_summary(
+    start_date: datetime = Query(..., description="Start date for analysis"),
+    end_date: datetime = Query(..., description="End date for analysis"),
+    db: Session = Depends(get_db)
+):
+    """
+    Get KPI summary for custom date range
+    """
+    analytics = AnalyticsService(db)
+    
+    revenue_metrics = analytics.calculate_revenue_metrics(start_date, end_date)
+    top_products = analytics.get_top_products(start_date, end_date, 5)
+    repeat_customers = analytics.count_repeat_customers(start_date, end_date)
+    
+    return {
+        **revenue_metrics,
+        "top_products": top_products,
+        "repeat_customers_count": repeat_customers,
+        "period_start": start_date,
+        "period_end": end_date
+    }
+
+
+@router.get("/revenue/comparison")
+async def get_revenue_comparison(
+    current_days: int = Query(30, ge=1, le=365),
+    db: Session = Depends(get_db)
+):
+    """
+    Compare current period revenue with previous period
+    """
+    analytics = AnalyticsService(db)
+    
+    # Current period
+    current_end = datetime.utcnow()
+    current_start = current_end - timedelta(days=current_days)
+    
+    # Previous period (same duration)
+    previous_end = current_start
+    previous_start = previous_end - timedelta(days=current_days)
+    
+    current_metrics = analytics.calculate_revenue_metrics(current_start, current_end)
+    previous_metrics = analytics.calculate_revenue_metrics(previous_start, previous_end)
+    
+    # Calculate percentage changes
+    revenue_change = 0
+    if previous_metrics['total_revenue'] > 0:
+        revenue_change = ((current_metrics['total_revenue'] - previous_metrics['total_revenue']) / previous_metrics['total_revenue']) * 100
+    
+    return {
+        "current_period": {
+            **current_metrics,
+            "start_date": current_start,
+            "end_date": current_end
+        },
+        "previous_period": {
+            **previous_metrics,
+            "start_date": previous_start,
+            "end_date": previous_end
+        },
+        "revenue_change_percent": round(revenue_change, 2)
+    }

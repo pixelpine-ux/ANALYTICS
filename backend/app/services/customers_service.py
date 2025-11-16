@@ -12,7 +12,6 @@ class CustomersService:
     def create_customer(self, customer_data: CustomerCreate) -> Customer:
         """Create a new customer"""
         try:
-            # Check if customer already exists
             existing = self.get_customer(customer_data.id)
             if existing:
                 raise HTTPException(status_code=400, detail="Customer ID already exists")

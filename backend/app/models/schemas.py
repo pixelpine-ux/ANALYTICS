@@ -139,3 +139,27 @@ class BulkResponse(BaseModel):
     success_count: int
     error_count: int
     errors: List[str] = []
+
+# === UTILITY FUNCTIONS ===
+def convert_sale_to_response(sale) -> SaleResponse:
+    """Convert Sale model to SaleResponse schema"""
+    return SaleResponse(
+        id=sale.id,
+        date=sale.date,
+        product_name=sale.product_name,
+        amount=sale.amount_cents / 100,
+        customer_id=sale.customer_id,
+        category=sale.category,
+        created_at=sale.created_at
+    )
+
+def convert_expense_to_response(expense) -> ExpenseResponse:
+    """Convert Expense model to ExpenseResponse schema"""
+    return ExpenseResponse(
+        id=expense.id,
+        date=expense.date,
+        description=expense.description,
+        amount=expense.amount_cents / 100,
+        category=expense.category,
+        created_at=expense.created_at
+    )
