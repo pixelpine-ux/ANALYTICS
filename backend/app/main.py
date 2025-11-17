@@ -1,11 +1,17 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from .core.config import settings
-from .core.database import engine, Base
-from .api import routes_upload, routes_kpi, routes_admin, sales, customers, expenses
+from .core.database import engine, Base, get_db
+from .core.events import event_bus
+from .services.analytics_event_handler import AnalyticsEventHandler
+from .api import routes_upload, routes_kpi, routes_admin, sales, customers, expenses, routes_csv_upload, dashboard, data_entry
 
 # Create database tables
 Base.metadata.create_all(bind=engine)
+
+# Initialize analytics event handler
+db = next(get_db())
+analytics_handler = AnalyticsEventHandler(db)
 
 # Initialize FastAPI app
 app = FastAPI(
@@ -27,6 +33,9 @@ app.add_middleware(
 
 # Include API routes
 app.include_router(routes_upload.router, prefix=settings.api_v1_prefix)
+app.include_router(routes_csv_upload.router, prefix=settings.api_v1_prefix)
+app.include_router(data_entry.router, prefix=settings.api_v1_prefix)
+app.include_router(dashboard.router, prefix=settings.api_v1_prefix)
 app.include_router(routes_kpi.router, prefix=settings.api_v1_prefix)
 app.include_router(routes_admin.router, prefix=settings.api_v1_prefix)
 app.include_router(sales.router, prefix=settings.api_v1_prefix)

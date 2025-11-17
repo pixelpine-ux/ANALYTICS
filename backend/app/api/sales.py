@@ -10,10 +10,11 @@ from ..services.sales_service import SalesService
 router = APIRouter(prefix="/sales", tags=["sales"])
 
 @router.post("/", response_model=SaleResponse)
-def create_sale(sale: SaleCreate, db: Session = Depends(get_db)):
-    """Create a new sale record"""
+async def create_sale(sale: SaleCreate, db: Session = Depends(get_db)):
+    """Create a new sale record with event emission"""
     service = SalesService(db)
-    db_sale = service.create_sale(sale)
+    sale_data = sale.dict()
+    db_sale = await service.create_sale(sale_data)
     # Convert cents back to dollars for response
     return SaleResponse(
         id=db_sale.id,
@@ -53,7 +54,7 @@ def get_sales(
 def get_sale(sale_id: int, db: Session = Depends(get_db)):
     """Get a specific sale by ID"""
     service = SalesService(db)
-    sale = service.get_sale(sale_id)
+    sale = service.get(sale_id)
     if not sale:
         raise HTTPException(status_code=404, detail="Sale not found")
     
@@ -68,10 +69,11 @@ def get_sale(sale_id: int, db: Session = Depends(get_db)):
     )
 
 @router.put("/{sale_id}", response_model=SaleResponse)
-def update_sale(sale_id: int, sale_update: SaleUpdate, db: Session = Depends(get_db)):
-    """Update an existing sale"""
+async def update_sale(sale_id: int, sale_update: SaleUpdate, db: Session = Depends(get_db)):
+    """Update an existing sale with event emission"""
     service = SalesService(db)
-    sale = service.update_sale(sale_id, sale_update)
+    update_data = sale_update.dict(exclude_unset=True)
+    sale = await service.update_sale(sale_id, update_data)
     if not sale:
         raise HTTPException(status_code=404, detail="Sale not found")
     
@@ -86,10 +88,10 @@ def update_sale(sale_id: int, sale_update: SaleUpdate, db: Session = Depends(get
     )
 
 @router.delete("/{sale_id}")
-def delete_sale(sale_id: int, db: Session = Depends(get_db)):
-    """Delete a sale"""
+async def delete_sale(sale_id: int, db: Session = Depends(get_db)):
+    """Delete a sale with event emission"""
     service = SalesService(db)
-    success = service.delete_sale(sale_id)
+    success = await service.delete_sale(sale_id)
     if not success:
         raise HTTPException(status_code=404, detail="Sale not found")
     
