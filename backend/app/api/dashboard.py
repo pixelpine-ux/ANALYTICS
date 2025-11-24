@@ -45,7 +45,7 @@ def get_revenue_trend(
     
     return [
         {
-            "date": result.date.isoformat(),
+            "date": result.date if isinstance(result.date, str) else result.date.isoformat(),
             "revenue": result.revenue_cents / 100,
             "transactions": result.transaction_count
         }

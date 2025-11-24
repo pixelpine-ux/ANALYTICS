@@ -1,8 +1,8 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
-from typing import Dict, Any
+from typing import Dict, Any, Optional
 from datetime import datetime
-from pydantic import BaseModel
+from pydantic import BaseModel, Field, validator
 
 from ..core.database import get_db
 from ..services.sales_service import SalesService
@@ -13,11 +13,25 @@ router = APIRouter(prefix="/entry", tags=["Data Entry"])
 
 # Simple data models for manual entry
 class QuickSale(BaseModel):
-    product_name: str
-    amount: float
-    customer_id: str = None
-    category: str = None
-    date: datetime = None
+    product_name: str = Field(..., min_length=1, max_length=200)
+    amount: float = Field(..., gt=0, description="Amount in dollars")
+    customer_id: Optional[str] = Field(None, max_length=50)
+    category: Optional[str] = Field(None, max_length=100)
+    date: Optional[datetime] = None
+    
+    @validator('product_name')
+    def validate_product_name(cls, v):
+        if not v or not v.strip():
+            raise ValueError('Product name cannot be empty')
+        return v.strip()
+    
+    @validator('amount')
+    def validate_amount(cls, v):
+        if v <= 0:
+            raise ValueError('Amount must be positive')
+        if v > 999999.99:
+            raise ValueError('Amount too large')
+        return round(v, 2)
 
 class QuickCustomer(BaseModel):
     id: str

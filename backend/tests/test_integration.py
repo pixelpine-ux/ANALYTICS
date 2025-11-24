@@ -175,7 +175,7 @@ class TestErrorHandling:
         }
         
         response = client.post("/api/v1/entry/quick-sale", json=invalid_sale)
-        assert response.status_code == 400
+        assert response.status_code == 422  # FastAPI returns 422 for validation errors
     
     def test_missing_resource_handling(self, client):
         """Test handling of missing resources"""
