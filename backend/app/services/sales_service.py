@@ -5,6 +5,7 @@ from typing import List, Optional, Dict, Any
 from ..models.analytics import Sale
 from ..core.base_service import BaseService
 from ..core.events import Event, EventType, event_bus
+from ..core.cache import cache_invalidate
 from fastapi import HTTPException
 
 class SalesService(BaseService[Sale]):
@@ -58,6 +59,9 @@ class SalesService(BaseService[Sale]):
     
     # Event emission methods
     async def _emit_created_event(self, sale: Sale):
+        # Invalidate relevant caches when new sale is created
+        self._invalidate_analytics_cache()
+        
         event = Event(
             event_type=EventType.SALE_CREATED,
             entity_id=str(sale.id),
@@ -68,6 +72,9 @@ class SalesService(BaseService[Sale]):
         await event_bus.publish(event)
     
     async def _emit_updated_event(self, sale: Sale):
+        # Invalidate relevant caches when sale is updated
+        self._invalidate_analytics_cache()
+        
         event = Event(
             event_type=EventType.SALE_UPDATED,
             entity_id=str(sale.id),
@@ -78,6 +85,9 @@ class SalesService(BaseService[Sale]):
         await event_bus.publish(event)
     
     async def _emit_deleted_event(self, sale: Sale):
+        # Invalidate relevant caches when sale is deleted
+        self._invalidate_analytics_cache()
+        
         event = Event(
             event_type=EventType.SALE_DELETED,
             entity_id=str(sale.id),
@@ -86,3 +96,9 @@ class SalesService(BaseService[Sale]):
             timestamp=datetime.utcnow()
         )
         await event_bus.publish(event)
+    
+    def _invalidate_analytics_cache(self):
+        """Invalidate all analytics-related cache entries"""
+        cache_invalidate("kpi_summary")
+        cache_invalidate("revenue")
+        cache_invalidate("top_products")

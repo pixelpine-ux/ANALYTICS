@@ -4,20 +4,24 @@ services:
   postgres:
     image: postgres:15
     environment:
-      POSTGRES_DB: retail_analytics
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: password
+      POSTGRES_DB: ${POSTGRES_DB:-retail_analytics}
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Please set POSTGRES_PASSWORD}
     ports:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    # Security: Don't run as root
+    user: postgres
 
   backend:
     build: ./backend
     ports:
       - "8000:8000"
     environment:
-      - DATABASE_URL=postgresql://postgres:password@postgres:5432/retail_analytics
+      - DATABASE_URL=${DATABASE_URL:?Please set DATABASE_URL}
+      - SECRET_KEY=${SECRET_KEY:?Please set SECRET_KEY}
+      - CORS_ORIGINS=${CORS_ORIGINS:-http://localhost:3000}
     depends_on:
       - postgres
     volumes:

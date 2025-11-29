@@ -1,0 +1,117 @@
+/**
+ * Professional Animation System
+ * Micro-interactions that enhance user experience
+ */
+
+/* Slide-in animations */
+@keyframes slide-in-from-top {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slide-in-from-bottom {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slide-in-from-left {
+  from {
+    opacity: 0;
+    transform: translateX(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* Fade animations */
+@keyframes fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes fade-in-scale {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* Utility classes */
+.animate-in {
+  animation-fill-mode: both;
+}
+
+.slide-in-from-top-1 {
+  animation: slide-in-from-top 0.3s ease-out;
+}
+
+.slide-in-from-bottom-1 {
+  animation: slide-in-from-bottom 0.3s ease-out;
+}
+
+.slide-in-from-left-1 {
+  animation: slide-in-from-left 0.4s ease-out;
+}
+
+.fade-in-1 {
+  animation: fade-in 0.5s ease-out;
+}
+
+.fade-in-scale-1 {
+  animation: fade-in-scale 0.4s ease-out;
+}
+
+/* Staggered animations for lists */
+.stagger-1 { animation-delay: 0.1s; }
+.stagger-2 { animation-delay: 0.2s; }
+.stagger-3 { animation-delay: 0.3s; }
+.stagger-4 { animation-delay: 0.4s; }
+
+/* Hover effects */
+.hover-lift {
+  transition: transform 0.2s ease-out, box-shadow 0.2s ease-out;
+}
+
+.hover-lift:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+}
+
+/* Button press effect */
+.press-effect {
+  transition: transform 0.1s ease-out;
+}
+
+.press-effect:active {
+  transform: scale(0.98);
+}
+
+/* Gradient animations */
+@keyframes gradient-shift {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+.animate-gradient {
+  background-size: 200% 200%;
+  animation: gradient-shift 3s ease infinite;
+}

@@ -103,3 +103,9 @@ temp/
 .mypy_cache/
 .dmypy.json
 dmypy.json
+
+# Documentation
+docs/
+
+# Gemini-specific
+.gemini/

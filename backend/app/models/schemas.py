@@ -1,6 +1,8 @@
 from pydantic import BaseModel, Field, validator
 from datetime import datetime
 from typing import Optional, List
+import re
+import html
 
 # === SALES SCHEMAS ===
 class SaleCreate(BaseModel):
@@ -14,7 +16,15 @@ class SaleCreate(BaseModel):
     def validate_product_name(cls, v):
         if not v.strip():
             raise ValueError('Product name cannot be empty')
-        return v.strip()
+        # Prevent SQL injection patterns
+        dangerous_patterns = ['--', ';', 'DROP', 'DELETE', 'INSERT', 'UPDATE', 'SELECT']
+        v_upper = v.upper()
+        for pattern in dangerous_patterns:
+            if pattern in v_upper:
+                raise ValueError('Invalid characters in product name')
+        # Sanitize HTML to prevent XSS
+        sanitized = html.escape(v.strip())
+        return sanitized
     
     @validator('amount')
     def validate_amount(cls, v):
@@ -57,9 +67,13 @@ class CustomerCreate(BaseModel):
     
     @validator('email')
     def validate_email(cls, v):
-        if v and '@' not in v:
+        if not v:
+            return v
+        # Basic email validation with regex
+        email_pattern = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
+        if not re.match(email_pattern, v):
             raise ValueError('Invalid email format')
-        return v
+        return v.lower().strip()
 
 class CustomerUpdate(BaseModel):
     name: Optional[str] = Field(None, max_length=200)

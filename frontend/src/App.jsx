@@ -1,84 +1,107 @@
-import { BrowserRouter as Router, Routes, Route, Link, useLocation } from 'react-router-dom'
-import { Dashboard } from './pages/Dashboard'
-import { Upload } from './pages/Upload'
-import { TestDashboard } from './pages/TestDashboard'
-import { SimpleDashboard } from './pages/SimpleDashboard'
-import { DebugAPI } from './components/DebugAPI'
-import './index.css'
+import { useState, useEffect } from 'react';
+import { DollarSign, TrendingUp, Users, ShoppingCart } from 'lucide-react';
+import KPICard from './components/KPICard';
+import RevenueChart from './components/RevenueChart';
+import SaleForm from './components/SaleForm';
+import CSVImport from './components/CSVImport';
+import DashboardLayout from './layouts/DashboardLayout';
 
-const Navigation = () => {
-  const location = useLocation()
-  
-  const isActive = (path) => location.pathname === path
+function App() {
+  const [isLoading, setIsLoading] = useState(false);
+  const [lastUpdated, setLastUpdated] = useState(new Date());
+
+  const handleRefresh = () => {
+    setIsLoading(true);
+    setTimeout(() => {
+      setLastUpdated(new Date());
+      setIsLoading(false);
+    }, 1500);
+  };
+
+  const kpiData = [
+    { title: 'Total Revenue', value: '$24,847', trend: 12.8, icon: DollarSign },
+    { title: 'Profit Margin', value: '18.2%', trend: -2.4, icon: TrendingUp },
+    { title: 'Active Customers', value: '1,247', trend: 8.6, icon: Users },
+    { title: 'Total Orders', value: '892', trend: 15.3, icon: ShoppingCart }
+  ];
+
+  const chartData = [
+    { date: '2024-11-23', revenue: 2400 },
+    { date: '2024-11-24', revenue: 1398 },
+    { date: '2024-11-25', revenue: 9800 },
+    { date: '2024-11-26', revenue: 3908 },
+    { date: '2024-11-27', revenue: 4800 },
+    { date: '2024-11-28', revenue: 3800 },
+    { date: '2024-11-29', revenue: 4300 },
+  ];
 
   return (
-    <nav className="bg-white/95 backdrop-blur-md shadow-soft border-b border-slate-200/60 sticky top-0 z-40">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between h-16">
-          <div className="flex items-center space-x-8">
-            <Link to="/" className="flex items-center space-x-3 group">
-              <div className="w-10 h-10 bg-gradient-to-br from-primary-500 to-primary-600 rounded-xl flex items-center justify-center shadow-lg group-hover:scale-105 transition-transform duration-200">
-                <span className="text-white font-bold text-lg">📈</span>
+    <DashboardLayout
+      lastUpdated={lastUpdated}
+      onRefresh={handleRefresh}
+      isLoading={isLoading}
+    >
+      <div className="section-spacing container-main">
+        
+        <div className="text-center component-spacing">
+          <h1 className="text-3xl font-bold text-gray-900">
+            Business Analytics
+          </h1>
+          <p className="text-gray-500">
+            Real-time insights for data-driven decisions
+          </p>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 grid-spacing component-spacing">
+          {kpiData.map((kpi, index) => (
+            <KPICard key={index} {...kpi} />
+          ))}
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-3 grid-spacing component-spacing">
+          <div className="lg:col-span-2">
+            <RevenueChart data={chartData} isLoading={isLoading} />
+          </div>
+          <div>
+            <SaleForm onSaleAdded={() => {}} isSubmitting={isLoading} />
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-3 grid-spacing">
+          <div>
+            <CSVImport onImportComplete={() => {}} />
+          </div>
+          <div className="card-default">
+            <h3 className="text-lg font-semibold text-gray-800 mb-4">Today's Summary</h3>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="text-center p-3 bg-green-100 rounded-lg">
+                <div className="text-2xl font-bold text-green-700">12</div>
+                <div className="text-sm text-green-800">Sales</div>
               </div>
-              <span className="text-xl font-bold bg-gradient-to-r from-slate-900 to-slate-700 bg-clip-text text-transparent">
-                Analytics
-              </span>
-            </Link>
-            <div className="flex bg-slate-100/80 backdrop-blur-sm rounded-xl p-1.5 border border-slate-200/50">
-              <Link
-                to="/"
-                className={`px-5 py-2.5 rounded-lg text-sm font-medium transition-all duration-300 flex items-center space-x-2 ${
-                  isActive('/')
-                    ? 'bg-white text-primary-600 shadow-md border border-primary-100 transform scale-105'
-                    : 'text-slate-600 hover:text-slate-900 hover:bg-white/70 hover:scale-102'
-                }`}
-              >
-                <span className="text-base">📈</span>
-                <span>Dashboard</span>
-              </Link>
-              <Link
-                to="/upload"
-                className={`px-5 py-2.5 rounded-lg text-sm font-medium transition-all duration-300 flex items-center space-x-2 ${
-                  isActive('/upload')
-                    ? 'bg-white text-primary-600 shadow-md border border-primary-100 transform scale-105'
-                    : 'text-slate-600 hover:text-slate-900 hover:bg-white/70 hover:scale-102'
-                }`}
-              >
-                <span className="text-base">📄</span>
-                <span>Upload</span>
-              </Link>
+              <div className="text-center p-3 bg-blue-100 rounded-lg">
+                <div className="text-2xl font-bold text-blue-700">8</div>
+                <div className="text-sm text-blue-800">Customers</div>
+              </div>
             </div>
           </div>
-          
-          <div className="flex items-center space-x-6">
-            <div className="flex items-center space-x-2 text-sm text-slate-500 bg-slate-50 px-3 py-1.5 rounded-full border border-slate-200">
-              <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></div>
-              <span className="font-medium">Live Data</span>
+          <div className="card-default">
+            <h3 className="text-lg font-semibold text-gray-800 mb-4">Recent Activity</h3>
+            <div className="flex flex-col gap-3">
+              <div className="flex justify-between">
+                <span className="text-gray-600">iPhone 15 Pro</span>
+                <span className="font-semibold">$1,199</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-gray-600">AirPods Pro</span>
+                <span className="font-semibold">$249</span>
+              </div>
             </div>
           </div>
         </div>
+
       </div>
-    </nav>
-  )
+    </DashboardLayout>
+  );
 }
 
-function App() {
-  return (
-    <Router>
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
-        <Navigation />
-        <main className="animate-fade-in">
-          <Routes>
-            <Route path="/" element={<SimpleDashboard />} />
-            <Route path="/debug" element={<div className="p-8"><DebugAPI /></div>} />
-            <Route path="/dashboard" element={<Dashboard />} />
-            <Route path="/test" element={<TestDashboard />} />
-            <Route path="/upload" element={<Upload />} />
-          </Routes>
-        </main>
-      </div>
-    </Router>
-  )
-}
-
-export default App
+export default App;

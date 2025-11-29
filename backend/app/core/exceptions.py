@@ -1,5 +1,7 @@
 from fastapi import HTTPException
 from typing import Optional
+import os
+import logging
 
 class AnalyticsException(Exception):
     """Base exception for analytics application"""
@@ -38,5 +40,11 @@ def handle_service_exceptions(func):
         except DatabaseError as e:
             raise HTTPException(status_code=500, detail=e.message)
         except Exception as e:
-            raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")
+            # Log the actual error for debugging
+            logging.error(f"Unexpected error in {func.__name__}: {str(e)}")
+            # Don't expose internal errors in production
+            if os.getenv("ENVIRONMENT") == "production":
+                raise HTTPException(status_code=500, detail="Internal server error")
+            else:
+                raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")
     return wrapper

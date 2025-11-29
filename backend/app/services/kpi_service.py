@@ -2,6 +2,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy import func, desc
 from ..models.analytics import Sale, Customer, Expense
 from ..core.events import Event, EventType, event_bus
+from ..core.cache import cached, cache_invalidate
 from datetime import datetime, timedelta
 from typing import Dict, List, Any
 
@@ -9,8 +10,9 @@ class KPIService:
     def __init__(self, db: Session):
         self.db = db
     
+    @cached("kpi_summary", ttl_seconds=300)  # Cache for 5 minutes
     async def calculate_all_kpis(self, days: int = 30) -> Dict[str, Any]:
-        """Calculate all KPIs and emit event"""
+        """Calculate all KPIs and emit event - CACHED VERSION"""
         kpis = {
             "revenue": self.get_total_revenue(days),
             "profit_margin": self.get_profit_margin(days),
@@ -26,8 +28,9 @@ class KPIService:
         await self._emit_kpi_event(kpis)
         return kpis
     
+    @cached("revenue", ttl_seconds=180)  # Cache for 3 minutes
     def get_total_revenue(self, days: int = 30) -> float:
-        """Calculate total revenue for the last N days"""
+        """Calculate total revenue for the last N days - CACHED"""
         cutoff_date = datetime.utcnow() - timedelta(days=days)
         result = self.db.query(func.sum(Sale.amount_cents)).filter(
             Sale.date >= cutoff_date
@@ -49,8 +52,9 @@ class KPIService:
         profit = revenue - expenses_dollars
         return (profit / revenue) * 100
     
+    @cached("top_products", ttl_seconds=600)  # Cache for 10 minutes
     def get_top_products(self, limit: int = 5) -> List[Dict]:
-        """Get top selling products by revenue"""
+        """Get top selling products by revenue - CACHED"""
         results = self.db.query(
             Sale.product_name,
             func.count(Sale.id).label('total_sales'),
